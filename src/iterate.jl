@@ -11,22 +11,22 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int};use_gpu=true)
             cu(get_A(net,r))
         )
         M2=*(
-            get_C(net,r-2u-v,r-u),
-            get_T(net,r-2u,r-u),
-            get_T(net,r-u-v,r-u),
-            get_A(net,r-u)
+            cu(get_C(net,r-2u-v,r-u)),
+            cu(get_T(net,r-2u,r-u)),
+            cu(get_T(net,r-u-v,r-u)),
+            cu(get_A(net,r-u)) 
         )
         M3=*(
-            get_C(net,r+2v+u,r+v),
-            get_T(net,r+v+u,r+v),
-            get_T(net,r+2v,r+v),
-            get_A(net,r+v)
+            cu(get_C(net,r+2v+u,r+v)),
+            cu(get_T(net,r+v+u,r+v)),
+            cu(get_T(net,r+2v,r+v)),
+            cu(get_A(net,r+v)) 
         )
         M4=*(
-            get_C(net,r+2v-2u,r+v-u),
-            get_T(net,r+v-2u,r+v-u),
-            get_T(net,r+2v-u,r+v-u),
-            get_A(net,r+v-u)
+            cu(get_C(net,r+2v-2u,r+v-u)),
+            cu(get_T(net,r+v-2u,r+v-u)),
+            cu(get_T(net,r+2v-u,r+v-u)),
+            cu(get_A(net,r+v-u)) 
         )
         R1=M1*M2
         R2=replaceinds(M3*M4,uniqueinds(M4,M3),addtags(uniqueinds(M4,M3),"*"))
