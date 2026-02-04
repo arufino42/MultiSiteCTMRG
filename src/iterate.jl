@@ -93,7 +93,7 @@ end
 function iterate_ctmrg(net::CTMEnvironment;use_gpu=true)
     
     for u in [[-1,0], [0,-1], [1,0], [0,1]]
-        vP = [get_P(net,r,use_gpu) for r in net.List_sites]
+        vP = [get_P(net,r,u;use_gpu=use_gpu) for r in net.List_sites]
         
         net2=net
         for r in net.List_sites
