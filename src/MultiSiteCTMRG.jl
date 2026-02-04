@@ -6,8 +6,8 @@ export
     translate_operator,
     partition_function_per_unit_cell,
     average_local_observable,
-    initialise_CTMRG_open_BC
-public get_A,
+    initialise_CTMRG_open_BC,
+    get_A,
     get_T,
     get_C,
     combiner_with_memory
