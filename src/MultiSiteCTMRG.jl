@@ -10,8 +10,7 @@ export
     get_A,
     get_T,
     get_C,
-    combiner_with_memory,
-    trial_func
+    combiner_with_memory
 
 using ITensors
 using LinearAlgebra
@@ -24,14 +23,6 @@ import Base: *
 *(A::ITensor,B::Vector{ITensor}) = *(A,B...)
 *(A::Vector{ITensor},B::ITensor) = *(A...,B)
 *(A::Vector{ITensor},B::Vector{ITensor}) = *(A...,B...)
-
-function trial_func()
-    println("Trial 3")
-end
-
-function sec_trial()
-    println("This is a new message")
-end
 
 """
 Structure holding the Corner Transfer Matrix environment tensors.

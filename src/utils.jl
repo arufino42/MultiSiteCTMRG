@@ -223,3 +223,7 @@ end
 function to_gpu(t::ITensor)
     return adapt(CuArray,t)
 end
+
+function to_cpu(t::ITensor)
+    return adapt(Array,t)
+end

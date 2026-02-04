@@ -38,10 +38,8 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int};use_gpu=true)
             righttags=tags(commonind(get_A(net,r)[1],get_A(net,r+v)[1]))
         )
         new_ind=commonind(U,S)
-        println("Modifying the function again")
-        error("stop")
-        X=map(x->1/sqrt(x),S*ITensor(1.,inds(S)[1]))'
-        Y=X*delta(inds(S)...,inds(X)...)
+        
+        Y=map(x-> x==0. ? 0. : 1/sqrt(x),S)
         @assert inds(Y)==inds(S)
         P1=R1*conj(U)*Y
         P1=replaceind(P1,commonind(P1,S),new_ind)
@@ -99,34 +97,63 @@ end
     contractions using GPU.
 """
 function iterate_ctmrg(net::CTMEnvironment;use_gpu=true)
-    
-    for u in [[-1,0], [0,-1], [1,0], [0,1]]
-        vP = [get_P(net,r,u;use_gpu=use_gpu) for r in net.List_sites]
-        
-        net2=net
-        for r in net.List_sites
-            v=[u[2],-u[1]]
-            nC1=*(
-                get_C(net,r-v+u,r),
-                get_T(net,r-v,r),
-                translate_P(net,vP[net.r_func(r-v)][2],r-v)
-            )
-            nT=*(
-                get_T(net,r+u,r),
-                get_A(net,r),
-                vP[net.r_func(r)][2] ,
-                translate_P(net,vP[net.r_func(r-v)][1],r-v)
-            )
-            nC2=*(
-                get_C(net,r+v+u,r),
-                get_T(net,r+v,r),
-                vP[net.r_func(r)][1]
-            )
-            net2=set_C(nC1/maximum(abs.(array(nC1))),net2,r-v,r-u)
-            net2=set_T(nT/maximum(abs.(array(nT))),net2,r,r-u)
-            net2=set_C(nC2/maximum(abs.(array(nC2))),net2,r+v,r-u)
+    if use_gpu
+        for u in [[-1,0], [0,-1], [1,0], [0,1]]
+            vP = [get_P(net,r,u;use_gpu=use_gpu) for r in net.List_sites]
+            
+            net2=net
+            for r in net.List_sites
+                v=[u[2],-u[1]]
+                nC1=*(
+                    to_gpu(get_C(net,r-v+u,r)),
+                    to_gpu(get_T(net,r-v,r)),
+                    translate_P(net,vP[net.r_func(r-v)][2],r-v)
+                )|>to_cpu
+                nT=*(
+                    to_gpu(get_T(net,r+u,r)),
+                    to_gpu.(get_A(net,r)),
+                    vP[net.r_func(r)][2] ,
+                    translate_P(net,vP[net.r_func(r-v)][1],r-v)
+                )|>to_cpu
+                nC2=*(
+                    to_gpu(get_C(net,r+v+u,r)),
+                    to_gpu(get_T(net,r+v,r)),
+                    vP[net.r_func(r)][1]
+                )|>to_cpu
+                net2=set_C(nC1/maximum(abs.(array(nC1))),net2,r-v,r-u)
+                net2=set_T(nT/maximum(abs.(array(nT))),net2,r,r-u)
+                net2=set_C(nC2/maximum(abs.(array(nC2))),net2,r+v,r-u)
+            end
+            net=net2
         end
-        net=net2
+    else
+        for u in [[-1,0], [0,-1], [1,0], [0,1]]
+            vP = [get_P(net,r,u;use_gpu=use_gpu) for r in net.List_sites]
+            net2=net
+            for r in net.List_sites
+                v=[u[2],-u[1]]
+                nC1=*(
+                    (get_C(net,r-v+u,r)),
+                    (get_T(net,r-v,r)),
+                    translate_P(net,vP[net.r_func(r-v)][2],r-v)
+                )
+                nT=*(
+                    (get_T(net,r+u,r)),
+                    (get_A(net,r)),
+                    vP[net.r_func(r)][2] ,
+                    translate_P(net,vP[net.r_func(r-v)][1],r-v)
+                )
+                nC2=*(
+                    (get_C(net,r+v+u,r)),
+                    (get_T(net,r+v,r)),
+                    vP[net.r_func(r)][1]
+                )
+                net2=set_C(nC1/maximum(abs.(array(nC1))),net2,r-v,r-u)
+                net2=set_T(nT/maximum(abs.(array(nT))),net2,r,r-u)
+                net2=set_C(nC2/maximum(abs.(array(nC2))),net2,r+v,r-u)
+            end
+            net=net2
+        end
     end
     return net
 end
