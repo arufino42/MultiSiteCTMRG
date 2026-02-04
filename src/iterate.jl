@@ -5,28 +5,28 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int};use_gpu=true)
     if use_gpu && CUDA.functional()
         v=[u[2],-u[1]]
         M1=*(
-            cu(get_C(net,r+u-v,r)),
-            cu(get_T(net,r+u,r)),
-            cu(get_T(net,r-v,r)),
-            cu(get_A(net,r))
+            to_gpu(get_C(net,r+u-v,r)),
+            to_gpu(get_T(net,r+u,r)),
+            to_gpu(get_T(net,r-v,r)),
+            to_gpu.(get_A(net,r))
         )
         M2=*(
-            cu(get_C(net,r-2u-v,r-u)),
-            cu(get_T(net,r-2u,r-u)),
-            cu(get_T(net,r-u-v,r-u)),
-            cu(get_A(net,r-u)) 
+            to_gpu(get_C(net,r-2u-v,r-u)),
+            to_gpu(get_T(net,r-2u,r-u)),
+            to_gpu(get_T(net,r-u-v,r-u)),
+            to_gpu.(get_A(net,r-u)) 
         )
         M3=*(
-            cu(get_C(net,r+2v+u,r+v)),
-            cu(get_T(net,r+v+u,r+v)),
-            cu(get_T(net,r+2v,r+v)),
-            cu(get_A(net,r+v)) 
+            to_gpu(get_C(net,r+2v+u,r+v)),
+            to_gpu(get_T(net,r+v+u,r+v)),
+            to_gpu(get_T(net,r+2v,r+v)),
+            to_gpu.(get_A(net,r+v)) 
         )
         M4=*(
-            cu(get_C(net,r+2v-2u,r+v-u)),
-            cu(get_T(net,r+v-2u,r+v-u)),
-            cu(get_T(net,r+2v-u,r+v-u)),
-            cu(get_A(net,r+v-u)) 
+            to_gpu(get_C(net,r+2v-2u,r+v-u)),
+            to_gpu(get_T(net,r+v-2u,r+v-u)),
+            to_gpu(get_T(net,r+2v-u,r+v-u)),
+            to_gpu.(get_A(net,r+v-u)) 
         )
         R1=M1*M2
         R2=replaceinds(M3*M4,uniqueinds(M4,M3),addtags(uniqueinds(M4,M3),"*"))
@@ -38,9 +38,14 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int};use_gpu=true)
             righttags=tags(commonind(get_A(net,r)[1],get_A(net,r+v)[1]))
         )
         new_ind=commonind(U,S)
-        P1=R1*conj(U)*map(x->x==0 ? 0 : 1/sqrt(x) ,S)
+        println("Modifying the function again")
+        error("stop")
+        X=map(x->1/sqrt(x),S*ITensor(1.,inds(S)[1]))'
+        Y=X*delta(inds(S)...,inds(X)...)
+        @assert inds(Y)==inds(S)
+        P1=R1*conj(U)*Y
         P1=replaceind(P1,commonind(P1,S),new_ind)
-        P2=R2*conj(V)*map(x->x==0 ? 0 : 1/sqrt(x) ,S)
+        P2=R2*conj(V)*Y
         P2=replaceind(P2,commonind(P2,S),new_ind)
     else
         v=[u[2],-u[1]]
@@ -78,9 +83,12 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int};use_gpu=true)
             righttags=tags(commonind(get_A(net,r)[1],get_A(net,r+v)[1]))
         )
         new_ind=commonind(U,S)
-        P1=R1*conj(U)*map(x->x==0 ? 0 : 1/sqrt(x) ,S)
+        X=map(x->1/sqrt(x),S*ITensor(1.,inds(S)[1]))'
+        Y=X*delta(inds(S)...,inds(X)...)
+        @assert inds(Y)==inds(S)
+        P1=R1*conj(U)*Y
         P1=replaceind(P1,commonind(P1,S),new_ind)
-        P2=R2*conj(V)*map(x->x==0 ? 0 : 1/sqrt(x) ,S)
+        P2=R2*conj(V)*Y
         P2=replaceind(P2,commonind(P2,S),new_ind)
     end
     return [P1,P2]

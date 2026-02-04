@@ -219,3 +219,7 @@ function translate_P(net::CTMEnvironment,P::ITensor,r::Vector{Int})
     P=translate_operator(P,-net.List_sites[net.r_func(r)]+r+[1,1])
     return P
 end
+
+function to_gpu(t::ITensor)
+    return adapt(CuArray,t)
+end

@@ -10,11 +10,13 @@ export
     get_A,
     get_T,
     get_C,
-    combiner_with_memory
+    combiner_with_memory,
+    trial_func
 
 using ITensors
 using LinearAlgebra
 using CUDA
+using Adapt
 using Setfield
 
 import Base: *
@@ -22,6 +24,10 @@ import Base: *
 *(A::ITensor,B::Vector{ITensor}) = *(A,B...)
 *(A::Vector{ITensor},B::ITensor) = *(A...,B)
 *(A::Vector{ITensor},B::Vector{ITensor}) = *(A...,B...)
+
+function trial_func()
+    println("Trial 2")
+end
 
 function sec_trial()
     println("This is a new message")
