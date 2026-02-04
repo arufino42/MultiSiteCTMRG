@@ -26,7 +26,7 @@ import Base: *
 *(A::Vector{ITensor},B::Vector{ITensor}) = *(A...,B...)
 
 function trial_func()
-    println("Trial 2")
+    println("Trial 3")
 end
 
 function sec_trial()
