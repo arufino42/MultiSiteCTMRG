@@ -1,0 +1,16 @@
+name = "MultiSiteCTMRG"
+uuid = "72e74508-fd94-4bf6-aab5-aacf62b8bdad"
+authors = ["afdossan <afonso.santos.rufino01@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+
+[compat]
+CUDA = "5.9.6"
+ITensors = "0.9.18"
+LinearAlgebra = "1.11.0"
+Setfield = "1.1.2"
