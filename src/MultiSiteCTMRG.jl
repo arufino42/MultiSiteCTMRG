@@ -10,7 +10,9 @@ export
     get_A,
     get_T,
     get_C,
-    combiner_with_memory
+    combiner_with_memory,
+    to_gpu,
+    to_cpu
 
 using ITensors
 using LinearAlgebra

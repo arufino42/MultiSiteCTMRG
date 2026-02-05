@@ -1,5 +1,5 @@
 
-function initialise_CTMRG_open_BC(χ::Int,vA::Vector{Vector{ITensor}},r_func,List_sites::Vector{Vector{Int}})
+function initialise_CTMRG_open_BC(χ::Int,vA::Vector{Vector{ITensor}},r_func,List_sites::Vector{Vector{Int}};use_gpu=true)
     C=Array{ITensor,2}(undef,4,length(List_sites))
     T=Array{ITensor,2}(undef,4,length(List_sites))
     init_combiner=combiner_with_memory()
@@ -24,10 +24,17 @@ function initialise_CTMRG_open_BC(χ::Int,vA::Vector{Vector{ITensor}},r_func,Lis
                 get_A(vA,r_func,r)[z],
                 get_A(vA,r_func,Int.(r+(u-v)/2))[z]
             ) for z in eachindex(vA[r_func(r)])]
-            psi1=ITensor(1.,i1...)
-            comb2=init_combiner(i2...,tags=tags(i2[1]))
-            comb3=init_combiner(i3...,tags=tags(i3[1]))
-            psi4=ITensor(1.,i4...)
+            if use_gpu && CUDA.functional()
+                psi1=ITensor(1.,i1...) |> to_gpu
+                comb2=init_combiner(i2...,tags=tags(i2[1])) |> to_gpu
+                comb3=init_combiner(i3...,tags=tags(i3[1])) |> to_gpu
+                psi4=ITensor(1.,i4...) |> to_gpu
+            else
+                psi1=ITensor(1.,i1...)
+                comb2=init_combiner(i2...,tags=tags(i2[1]))
+                comb3=init_combiner(i3...,tags=tags(i3[1]))
+                psi4=ITensor(1.,i4...)
+            end
             corner=*(get_A(vA,r_func,r),psi1,comb2,comb3,psi4)
             C=set_C(corner,C,r_func,r,r-u)
         end 
@@ -49,9 +56,15 @@ function initialise_CTMRG_open_BC(χ::Int,vA::Vector{Vector{ITensor}},r_func,Lis
                 get_A(vA,r_func,r)[z],
                 get_A(vA,r_func,r-v)[z]
             ) for z in eachindex(vA[r_func(r)])]
-            psi1=ITensor(1.,i1...)
-            comb2=init_combiner(i2...,tags=tags(i2[1]))
-            comb4=init_combiner(i4...,tags=tags(i4[1]))
+            if use_gpu && CUDA.functional()
+                psi1=ITensor(1.,i1...)  |> to_gpu
+                comb2=init_combiner(i2...,tags=tags(i2[1])) |> to_gpu
+                comb4=init_combiner(i4...,tags=tags(i4[1])) |> to_gpu
+            else
+                psi1=ITensor(1.,i1...) 
+                comb2=init_combiner(i2...,tags=tags(i2[1]))
+                comb4=init_combiner(i4...,tags=tags(i4[1]))
+            end
             edge=*(get_A(vA,r_func,r),psi1,comb2,comb4)
             T=set_T(edge,T,r_func,r,r-u)
         end
