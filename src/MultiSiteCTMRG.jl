@@ -12,13 +12,15 @@ export
     get_C,
     combiner_with_memory,
     to_gpu,
-    to_cpu
+    to_cpu,
+    transfer_matrix_eigenvalues
 
 using ITensors
 using LinearAlgebra
 using CUDA
 using Adapt
 using Setfield
+using KrylovKit
 
 import Base: *
 

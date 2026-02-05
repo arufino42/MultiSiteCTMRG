@@ -110,3 +110,60 @@ function calc_z(net::CTMEnvironment,r)
     Z=get_C(net,1,r+[-1,-1])*get_T(net,1,r+[0,-1])*get_C(net,2,r+[1,-1])*get_T(net,4,r+[-1,0])*get_A(net,r)*get_T(net,2,r+[1,0])*get_C(net,4,r+[-1,1])*get_T(net,3,r+[0,1])*get_C(net,3,r+[1,1])
     return Z[]
 end
+
+function calculate_horizontal_transfer_matrix(net::CTMEnvironment,Lx::Int)
+    function transfer_operator(x)
+        ind1=commonind(x,get_C(net,1,[0,1]))
+        ind2=commonind(x,get_C(net,4,[0,2]))
+        for r in 1:Lx
+            x=*(
+                x,get_T(net,1,[r,1]),get_T(net,3,[r,2])
+            )
+        end
+        return replaceinds(x,[
+            commonind(x,get_C(net,2,[Lx+1,1])),
+            commonind(x,get_C(net,3,[Lx+1,2]))
+        ],[
+            ind1,
+            ind2
+        ])
+    end
+end
+
+
+function calculate_vertical_transfer_matrix(net::CTMEnvironment,Ly::Int)
+    function transfer_operator(x)
+        ind1=commonind(x,get_C(net,1,[1,0]))
+        ind2=commonind(x,get_C(net,2,[2,0]))
+        for r in 1:Ly
+            x=*(
+                x,get_T(net,4,[1,r]),get_T(net,2,[2,r])
+            )
+        end
+        return replaceinds(x,[
+            commonind(x,get_C(net,4,[1,Ly+1])),
+            commonind(x,get_C(net,3,[2,Ly+1]))
+        ],[
+            ind1,
+            ind2
+        ])
+    end
+end
+
+function transfer_matrix_eigenvalues(net::CTMEnvironment,Lx::Int,Ly::Int;use_gpu=true)
+    Tx=calculate_horizontal_transfer_matrix(net,Lx)
+    if use_gpu && CUDA.functional()
+        x0=randomITensor(noncommoninds(get_C(net,1,[0,1]),get_C(net,4,[0,2])))|>to_gpu
+    else
+        x0=randomITensor(noncommoninds(get_C(net,1,[0,1]),get_C(net,4,[0,2])))
+    end
+    valsX, vecs, info = eigsolve(Tx,x0,5,:LM)
+    Ty=calculate_vertical_transfer_matrix(net,Ly)
+    if use_gpu && CUDA.functional()
+        x0=randomITensor(noncommoninds(get_C(net,1,[1,0]),get_C(net,2,[2,0])))|>to_gpu
+    else
+        x0=randomITensor(noncommoninds(get_C(net,1,[1,0]),get_C(net,2,[2,0])))
+    end
+    valsY, vecs, info = eigsolve(Ty,x0,5,:LM)
+    return (valsX,valsY)
+end
