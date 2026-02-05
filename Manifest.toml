@@ -2,7 +2,6 @@
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-<<<<<<< HEAD
 project_hash = "05dba4ce3fdbc903308cbb7dc89f19a23f911a79"
 
 [[deps.AbstractFFTs]]
