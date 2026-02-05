@@ -72,9 +72,9 @@ function iterate_ctmrg(net::CTMEnvironment)
                 (get_T(net,r+v,r)),
                 vP[net.r_func(r)][1]
             )
-            net2=set_C(nC1/maximum(abs.(storage(nC1))),net2,r-v,r-u)
-            net2=set_T(nT/maximum(abs.(storage(nT))),net2,r,r-u)
-            net2=set_C(nC2/maximum(abs.(storage(nC2))),net2,r+v,r-u)
+            net2=set_C(nC1/maximum(abs.(array(nC1))),net2,r-v,r-u)
+            net2=set_T(nT/maximum(abs.(array(nT))),net2,r,r-u)
+            net2=set_C(nC2/maximum(abs.(array(nC2))),net2,r+v,r-u)
         end
         net=net2
     end
