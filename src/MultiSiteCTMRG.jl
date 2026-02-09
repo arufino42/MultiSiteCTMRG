@@ -40,6 +40,8 @@ struct CTMEnvironment
     List_sites::Vector{Vector{Int}}
 end
 
+ITensors.disable_warn_order()
+
 # Utility functions
 include("utils.jl")
 include("observables.jl")
