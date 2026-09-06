@@ -1,4 +1,29 @@
 
+"""
+    initialise_CTMRG_open_BC(χ::Int, vA::Vector{Vector{ITensor}},
+                             r_func, List_sites::Vector{Vector{Int}};
+                             use_gpu=true) -> CTMEnvironment
+
+Construct an open-boundary CTM seed from local tensor layers. Supply one
+nonempty vector of layers per inequivalent site, stored in reference
+coordinates `[1, 1]`. `r_func` must map every integer lattice coordinate
+to a valid entry, with `r_func(List_sites[k]) == k`.
+
+Each layer must share a matching virtual index with the corresponding layer
+at each nearest neighbor. Layer counts and connectivity must be consistent.
+All indices accessed through `get_A` need integer `x=...,y=...` tags;
+on-site indices shared by layers are contracted when the layers multiply.
+
+Outward legs are contracted with all-ones tensors, and remaining boundary
+legs are fused across layers with a shared remembered combiner. Initial
+corners and edges are neither normalized nor truncated to `χ`; this cutoff
+is applied by subsequent CTMRG sweeps.
+
+When `use_gpu && CUDA.functional()`, newly created boundary factors use GPU
+storage. The input `vA` is retained as supplied, so move its tensors to the
+GPU beforehand. Use `use_gpu=false` with CPU tensors for a CPU calculation.
+This constructs a seed, not a converged environment.
+"""
 function initialise_CTMRG_open_BC(χ::Int,vA::Vector{Vector{ITensor}},r_func,List_sites::Vector{Vector{Int}};use_gpu=true)
     C=Array{ITensor,2}(undef,4,length(List_sites))
     T=Array{ITensor,2}(undef,4,length(List_sites))

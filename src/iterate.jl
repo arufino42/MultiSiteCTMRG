@@ -1,5 +1,13 @@
 """
-    Auxiliary function that calculates the projector for a CTMRG move in direction `u` centered around site `r`.
+    get_P(net::CTMEnvironment, r::Vector{Int}, u::Vector{Int}) -> Vector{ITensor}
+
+Build the pair of projectors for a directional CTMRG move centered at `r`
+along the cardinal unit vector `u`. Contracts four enlarged corners into
+two half environments, then uses an SVD with `maxdim=net.χ` and
+`cutoff=1e-15`. Inverse square roots of zero singular values are set to zero.
+
+Returns `[P1, P2]` with coordinate-tagged retained indices. Does not update
+the environment. Internal helper for [`iterate_ctmrg`](@ref).
 """
 function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int})
     
@@ -47,8 +55,21 @@ function get_P(net::CTMEnvironment,r::Vector{Int},u::Vector{Int})
 end
 
 """
-    Function which calculates an iteration of multi-site CTMRG. Choose option `gpu=true` for tensor
-    contractions using GPU.
+    iterate_ctmrg(net::CTMEnvironment) -> CTMEnvironment
+
+Perform one complete directional sweep: left, up, right, down. For each
+direction, compute projectors for all representative sites from the current
+environment, then update their corners and edges. Retain the returned state:
+`net = iterate_ctmrg(net)`.
+
+Projector SVDs use maximum dimension `net.χ` and cutoff `1e-15`. Each
+updated boundary tensor is divided by its maximum absolute entry; zero
+tensors are not guarded against. Bulk tensors and the site map are retained.
+
+No convergence test or diagnostic tuple is returned. Device placement follows
+the tensor storage; there is no `gpu` or `use_gpu` keyword on this function.
+Observables contract the current tensors directly, so no environment-cache
+refresh is required.
 """
 function iterate_ctmrg(net::CTMEnvironment)
     for u in [[-1,0], [0,-1], [1,0], [0,1]]
